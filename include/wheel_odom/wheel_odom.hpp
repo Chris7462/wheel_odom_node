@@ -35,6 +35,11 @@ private:
     const sensor_msgs::msg::Imu::ConstSharedPtr imu_msg);
 
   double wrap2pi(const double angle);
+
+  bool init_;
+  double pose_x_;
+  double pose_y_;
+  double previous_time_;
 };
 
 } // wheel_odom_node
