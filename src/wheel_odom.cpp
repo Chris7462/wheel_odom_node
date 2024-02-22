@@ -18,11 +18,11 @@ WheelOdomNode::WheelOdomNode()
   // sync gps and imu msg
   auto rmw_qos_profile = qos.get_rmw_qos_profile();
   sub_wheel_spd_.subscribe(this, "kitti/oxts/gps/vel", rmw_qos_profile);
-  sub_imu_.subscribe(this, "kitti/oxts/imu", rmw_qos_profile);
+  sub_imu_.subscribe(this, "kitti/oxts/imu_rotated", rmw_qos_profile);
   sync_.registerCallback(&WheelOdomNode::sync_callback, this);
 
   pub_wheel_odom_ = create_publisher<nav_msgs::msg::Odometry>(
-    "wheel_odom", qos);
+    "kitti/wheel_odom", qos);
 
   tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 }
@@ -42,8 +42,8 @@ void WheelOdomNode::sync_callback(
   const double & v = wheel_spd_msg->twist.linear.x;
   const double & a = imu_msg->linear_acceleration.x;
   double dt = current_time - previous_time_;
-  double yaw, pitch, roll;
-  tf2::getEulerYPR(imu_msg->orientation, yaw, pitch, roll);
+  double yaw, dummy;
+  tf2::getEulerYPR(imu_msg->orientation, yaw, dummy, dummy);
   pose_x_ += (v * dt + 0.5 * a * dt * dt) * std::cos(yaw);
   pose_y_ += (v * dt + 0.5 * a * dt * dt) * std::sin(yaw);
 
