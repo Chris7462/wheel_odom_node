@@ -15,7 +15,9 @@ find_package(message_filters REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
 
 add_executable(wheel_odom_node
   src/wheel_odom_node.cpp
@@ -31,12 +33,20 @@ ament_target_dependencies(wheel_odom_node PUBLIC
   sensor_msgs
   geometry_msgs
   nav_msgs
-  tf2_geometry_msgs)
+  tf2
+  tf2_geometry_msgs
+  tf2_ros)
 
 target_compile_features(wheel_odom_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 
 install(TARGETS wheel_odom_node
   DESTINATION lib/${PROJECT_NAME})
+
+install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME})
+
+install(DIRECTORY rviz
+  DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

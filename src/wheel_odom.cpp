@@ -1,4 +1,5 @@
 // ros header
+#include <tf2/utils.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
 // local header
@@ -10,7 +11,7 @@ namespace wheel_odom_node
 
 WheelOdomNode::WheelOdomNode()
 : Node("wheel_odom_node"), sync_(policy_t(10), sub_wheel_spd_, sub_imu_),
-  init_{false}, pose_x_{0.0}, pose_y_{0.0}, previous_time_{0.0}
+  wheel_init_{false}, pose_x_{0.0}, pose_y_{0.0}, previous_time_{0.0}
 {
   rclcpp::QoS qos(10);
 
@@ -22,45 +23,59 @@ WheelOdomNode::WheelOdomNode()
 
   pub_wheel_odom_ = create_publisher<nav_msgs::msg::Odometry>(
     "wheel_odom", qos);
+
+  tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 }
 
 void WheelOdomNode::sync_callback(
   const geometry_msgs::msg::TwistStamped::ConstSharedPtr wheel_spd_msg,
   const sensor_msgs::msg::Imu::ConstSharedPtr imu_msg)
 {
-  double dt;
-  if (!init_) {
-    dt = 0.0;
-    init_ = true;
-  } else {
-    dt = rclcpp::Time(wheel_spd_msg->header.stamp).seconds() - previous_time_;
+  double current_time = rclcpp::Time(wheel_spd_msg->header.stamp).seconds();
+
+  if (!wheel_init_) {
+    previous_time_ = current_time;
+    wheel_init_ = true;
   }
 
-  tf2::Quaternion q_current;
-  tf2::fromMsg(imu_msg->orientation, q_current);
-  double roll, pitch, yaw;
-  tf2::Matrix3x3(q_current).getRPY(roll, pitch, yaw);
-  q_current.setRPY(0.0, 0.0, wrap2pi(yaw));
-  q_current.normalize();
-
-  // calculate the current pose of the vehicle
+  // calculate the current pose of the vehicle based on the wheel speed
   const double & v = wheel_spd_msg->twist.linear.x;
   const double & a = imu_msg->linear_acceleration.x;
+  double dt = current_time - previous_time_;
+  double yaw, pitch, roll;
+  tf2::getEulerYPR(imu_msg->orientation, yaw, pitch, roll);
   pose_x_ += (v * dt + 0.5 * a * dt * dt) * std::cos(yaw);
   pose_y_ += (v * dt + 0.5 * a * dt * dt) * std::sin(yaw);
 
+  previous_time_ = current_time;
+
+  tf2::Quaternion q_current;
+  q_current.setRPY(0.0, 0.0, wrap2pi(yaw));
+  q_current.normalize();
+
+  // publish wheel odom msg
   nav_msgs::msg::Odometry wheel_odom_msg;
   wheel_odom_msg.header.stamp = wheel_spd_msg->header.stamp;
   wheel_odom_msg.header.frame_id = "odom";
-  wheel_odom_msg.child_frame_id = "base_link";
+  wheel_odom_msg.child_frame_id = "wheel_link";
   tf2::toMsg(tf2::Vector3(pose_x_, pose_y_, 0.0), wheel_odom_msg.pose.pose.position);  // x, y, z
   wheel_odom_msg.pose.pose.orientation = tf2::toMsg(q_current);
-//wheel_odom_msg.pose.covariance; // x, y, z, roll, pitch, yaw
-//wheel_odom_msg.twist.twist.linear;  // x, y, z;
-//wheel_odom_msg.twist.twist.angular; // x, y, z;
-//wheel_odom_msg.twist.covariance;  // x, y, z, roll, pitch, yaw
+  //wheel_odom_msg.pose.covariance; // x, y, z, roll, pitch, yaw
+  wheel_odom_msg.twist.twist.linear = wheel_spd_msg->twist.linear;
+  wheel_odom_msg.twist.twist.angular = imu_msg->angular_velocity;
+  //wheel_odom_msg.twist.covariance;  // x, y, z, roll, pitch, yaw
+  pub_wheel_odom_->publish(wheel_odom_msg);
 
-  previous_time_ = rclcpp::Time(wheel_spd_msg->header.stamp).seconds();
+  // publish wheel odom tf msg
+  geometry_msgs::msg::TransformStamped wheel_tf;
+  wheel_tf.header.stamp = wheel_spd_msg->header.stamp;
+  wheel_tf.header.frame_id = "odom";
+  wheel_tf.child_frame_id = "wheel_link";
+  wheel_tf.transform.translation = tf2::toMsg(tf2::Vector3(pose_x_, pose_y_, 0.0));
+  wheel_tf.transform.rotation = tf2::toMsg(q_current);
+
+  // Send the transform
+  tf_broadcaster_->sendTransform(wheel_tf);
 }
 
 double WheelOdomNode::wrap2pi(const double angle)

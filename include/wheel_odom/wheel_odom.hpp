@@ -8,6 +8,7 @@
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <tf2_ros/transform_broadcaster.h>
 
 
 namespace wheel_odom_node
@@ -30,13 +31,15 @@ private:
 
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pub_wheel_odom_;
 
+  std::unique_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+
   void sync_callback(
     const geometry_msgs::msg::TwistStamped::ConstSharedPtr wheel_spd_msg,
     const sensor_msgs::msg::Imu::ConstSharedPtr imu_msg);
 
   double wrap2pi(const double angle);
 
-  bool init_;
+  bool wheel_init_;
   double pose_x_;
   double pose_y_;
   double previous_time_;
