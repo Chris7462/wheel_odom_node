@@ -23,8 +23,6 @@ WheelOdomNode::WheelOdomNode()
 
   pub_wheel_odom_ = create_publisher<nav_msgs::msg::Odometry>(
     "kitti/wheel_odom", qos);
-
-  tf_broadcaster_ = std::make_unique<tf2_ros::TransformBroadcaster>(*this);
 }
 
 void WheelOdomNode::sync_callback(
@@ -57,7 +55,7 @@ void WheelOdomNode::sync_callback(
   nav_msgs::msg::Odometry wheel_odom_msg;
   wheel_odom_msg.header.stamp = wheel_spd_msg->header.stamp;
   wheel_odom_msg.header.frame_id = "odom";
-  wheel_odom_msg.child_frame_id = "wheel_link";
+  wheel_odom_msg.child_frame_id = "base_link";
   tf2::toMsg(tf2::Vector3(pose_x_, pose_y_, 0.0), wheel_odom_msg.pose.pose.position);  // x, y, z
   wheel_odom_msg.pose.pose.orientation = tf2::toMsg(q_current);
   //wheel_odom_msg.pose.covariance; // x, y, z, roll, pitch, yaw
@@ -65,17 +63,6 @@ void WheelOdomNode::sync_callback(
   wheel_odom_msg.twist.twist.angular = imu_msg->angular_velocity;
   //wheel_odom_msg.twist.covariance;  // x, y, z, roll, pitch, yaw
   pub_wheel_odom_->publish(wheel_odom_msg);
-
-  // publish wheel odom tf msg
-  geometry_msgs::msg::TransformStamped wheel_tf;
-  wheel_tf.header.stamp = wheel_spd_msg->header.stamp;
-  wheel_tf.header.frame_id = "odom";
-  wheel_tf.child_frame_id = "wheel_link";
-  wheel_tf.transform.translation = tf2::toMsg(tf2::Vector3(pose_x_, pose_y_, 0.0));
-  wheel_tf.transform.rotation = tf2::toMsg(q_current);
-
-  // Send the transform
-  tf_broadcaster_->sendTransform(wheel_tf);
 }
 
 double WheelOdomNode::wrap2pi(const double angle)

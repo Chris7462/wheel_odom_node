@@ -17,7 +17,6 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-find_package(tf2_ros REQUIRED)
 
 add_executable(wheel_odom_node
   src/wheel_odom_node.cpp
@@ -34,8 +33,7 @@ ament_target_dependencies(wheel_odom_node PUBLIC
   geometry_msgs
   nav_msgs
   tf2
-  tf2_geometry_msgs
-  tf2_ros)
+  tf2_geometry_msgs)
 
 target_compile_features(wheel_odom_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
 

@@ -16,6 +16,14 @@ def generate_launch_description():
              '/data/kitti/raw/2011_09_29_drive_0071_sync_bag', '--clock']
     )
 
+    imu_rotate_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([
+            PathJoinSubstitution([
+                FindPackageShare('gps_imu_node'), 'launch', 'imu_rotate_launch.py'
+            ])
+        ])
+    )
+
     wheel_odom_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([
             PathJoinSubstitution([
@@ -35,6 +43,7 @@ def generate_launch_description():
     return LaunchDescription([
         SetParameter(name='use_sim_time', value=True),
         bag_exec,
+        imu_rotate_launch,
         wheel_odom_launch,
         rviz_node
     ])
