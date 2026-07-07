@@ -1,15 +1,18 @@
-cmake_minimum_required(VERSION 3.16)
-project(wheel_odom_node)
+cmake_minimum_required(VERSION 3.20)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-O3 -Wall -Wextra -Wpedantic)
+project(wheel_odom_node
+  VERSION 0.1.0
+  DESCRIPTION "Wheel speed + IMU dead-reckoning odometry node"
+  LANGUAGES CXX)
+
+# Default to a Release build if the user doesn't specify one
+if(NOT CMAKE_BUILD_TYPE)
+  message(STATUS "No build type specified, defaulting to 'Release'.")
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
 endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(sensor_msgs REQUIRED)
@@ -22,25 +25,32 @@ add_executable(wheel_odom_node
   src/wheel_odom_node.cpp
   src/wheel_odom.cpp)
 
-target_include_directories(wheel_odom_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
+target_include_directories(wheel_odom_node PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-ament_target_dependencies(wheel_odom_node PUBLIC
-  rclcpp
-  message_filters
-  sensor_msgs
-  geometry_msgs
-  nav_msgs
-  tf2
-  tf2_geometry_msgs)
+target_link_libraries(wheel_odom_node PRIVATE
+  ${rclcpp_TARGETS}
+  ${message_filters_TARGETS}
+  ${sensor_msgs_TARGETS}
+  ${geometry_msgs_TARGETS}
+  ${nav_msgs_TARGETS}
+  ${tf2_TARGETS}
+  ${tf2_geometry_msgs_TARGETS})
 
-target_compile_features(wheel_odom_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+target_compile_features(wheel_odom_node PRIVATE cxx_std_17)  # Require C++17
+
+target_compile_options(wheel_odom_node PRIVATE
+  -Wall
+  -Wextra
+  -Wpedantic)
 
 install(TARGETS wheel_odom_node
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME})
+
+install(DIRECTORY param
   DESTINATION share/${PROJECT_NAME})
 
 install(DIRECTORY rviz
