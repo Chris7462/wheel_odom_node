@@ -46,8 +46,7 @@ def generate_launch_description():
     local_gps_imu_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             join(get_package_share_directory('local_gps_imu'),
-                'launch', 'local_gps_imu_launch.py'
-            )
+                 'launch', 'local_gps_imu_launch.py')
         ),
         launch_arguments={
             'use_sim_time': LaunchConfiguration('use_sim_time')
