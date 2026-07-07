@@ -2,9 +2,9 @@
 
 // ros header
 #include <rclcpp/rclcpp.hpp>
-#include <message_filters/subscriber.h>
-#include <message_filters/synchronizer.h>
-#include <message_filters/sync_policies/approximate_time.h>
+#include <message_filters/subscriber.hpp>
+#include <message_filters/synchronizer.hpp>
+#include <message_filters/sync_policies/approximate_time.hpp>
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 #include <nav_msgs/msg/odometry.hpp>
@@ -16,25 +16,63 @@ namespace wheel_odom_node
 class WheelOdomNode : public rclcpp::Node
 {
 public:
+  /**
+   * @brief Constructor for WheelOdomNode
+   */
   WheelOdomNode();
+
+  /**
+   * @brief Destructor for WheelOdomNode
+   */
   ~WheelOdomNode() = default;
 
 private:
+  /**
+   * @brief Initialize node parameters with validation
+   * @return true if initialization successful, false otherwise
+   */
+  bool initialize_parameters();
+
+  /**
+   * @brief Initialize ROS2 publishers, subscribers, and message filters
+   * @return true if initialization successful, false otherwise
+   */
+  bool initialize_ros_components();
+
+  /**
+   * @brief Synchronized callback for incoming wheel speed and IMU messages
+   * @param wheel_spd_msg Incoming wheel speed message
+   * @param imu_msg Incoming IMU message
+   */
+  void sync_callback(
+    const geometry_msgs::msg::TwistStamped::ConstSharedPtr wheel_spd_msg,
+    const sensor_msgs::msg::Imu::ConstSharedPtr imu_msg);
+
+  /**
+   * @brief Wrap an angle to the range [-pi, pi]
+   */
+  double wrap2pi(const double angle);
+
+private:
+  // ROS2 parameters: topics
+  std::string wheel_spd_input_topic_;
+  std::string imu_input_topic_;
+  std::string wheel_odom_output_topic_;
+
+  // ROS2 parameters: queues
+  int queue_size_;
+  int sync_queue_size_;
+
+  // Message filter subscribers
   message_filters::Subscriber<geometry_msgs::msg::TwistStamped> sub_wheel_spd_;
   message_filters::Subscriber<sensor_msgs::msg::Imu> sub_imu_;
 
   using policy_t = message_filters::sync_policies::ApproximateTime<
     geometry_msgs::msg::TwistStamped, sensor_msgs::msg::Imu>;
 
-  message_filters::Synchronizer<policy_t> sync_;
+  std::shared_ptr<message_filters::Synchronizer<policy_t>> sync_;
 
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pub_wheel_odom_;
-
-  void sync_callback(
-    const geometry_msgs::msg::TwistStamped::ConstSharedPtr wheel_spd_msg,
-    const sensor_msgs::msg::Imu::ConstSharedPtr imu_msg);
-
-  double wrap2pi(const double angle);
 
   bool wheel_init_;
   double pose_x_;
