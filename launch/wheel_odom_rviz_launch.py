@@ -11,7 +11,7 @@ from launch_ros.actions import Node
 
 
 def generate_launch_description():
-    pkg_share = get_package_share_directory('wheel_odom_node')
+    pkg_share = get_package_share_directory('wheel_odom')
 
     declare_use_sim_time = DeclareLaunchArgument(
         'use_sim_time',

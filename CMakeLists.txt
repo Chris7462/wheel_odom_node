@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(wheel_odom_node
+project(wheel_odom
   VERSION 0.1.0
   DESCRIPTION "Wheel speed + IMU dead-reckoning odometry node"
   LANGUAGES CXX)
@@ -21,14 +21,14 @@ find_package(nav_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
-add_executable(wheel_odom_node
+add_executable(${PROJECT_NAME}_node
   src/wheel_odom_node.cpp
   src/wheel_odom.cpp)
 
-target_include_directories(wheel_odom_node PRIVATE
+target_include_directories(${PROJECT_NAME}_node PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-target_link_libraries(wheel_odom_node PRIVATE
+target_link_libraries(${PROJECT_NAME}_node PRIVATE
   ${rclcpp_TARGETS}
   ${message_filters_TARGETS}
   ${sensor_msgs_TARGETS}
@@ -37,14 +37,14 @@ target_link_libraries(wheel_odom_node PRIVATE
   ${tf2_TARGETS}
   ${tf2_geometry_msgs_TARGETS})
 
-target_compile_features(wheel_odom_node PRIVATE cxx_std_17)  # Require C++17
+target_compile_features(${PROJECT_NAME}_node PRIVATE cxx_std_17)  # Require C++17
 
-target_compile_options(wheel_odom_node PRIVATE
+target_compile_options(${PROJECT_NAME}_node PRIVATE
   -Wall
   -Wextra
   -Wpedantic)
 
-install(TARGETS wheel_odom_node
+install(TARGETS ${PROJECT_NAME}_node
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY launch

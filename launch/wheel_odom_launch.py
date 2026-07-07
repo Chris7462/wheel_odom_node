@@ -16,12 +16,12 @@ def generate_launch_description():
     )
 
     params = join(
-        get_package_share_directory('wheel_odom_node'), 'param',
+        get_package_share_directory('wheel_odom'), 'param',
         'wheel_odom.yaml'
     )
 
     wheel_odom_node = Node(
-        package='wheel_odom_node',
+        package='wheel_odom',
         executable='wheel_odom_node',
         name='wheel_odom_node',
         parameters=[

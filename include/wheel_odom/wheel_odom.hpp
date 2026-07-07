@@ -13,21 +13,21 @@
 #include <nav_msgs/msg/odometry.hpp>
 
 
-namespace wheel_odom_node
+namespace wheel_odom
 {
 
-class WheelOdomNode : public rclcpp::Node
+class WheelOdom : public rclcpp::Node
 {
 public:
   /**
    * @brief Constructor for WheelOdomNode
    */
-  WheelOdomNode();
+  WheelOdom();
 
   /**
    * @brief Destructor for WheelOdomNode
    */
-  ~WheelOdomNode() = default;
+  ~WheelOdom() = default;
 
 private:
   /**
@@ -82,4 +82,4 @@ private:
   std::optional<double> previous_time_;
 };
 
-} // wheel_odom_node
+} // wheel_odom

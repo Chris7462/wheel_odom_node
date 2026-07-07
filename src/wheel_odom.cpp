@@ -6,10 +6,10 @@
 #include "wheel_odom/wheel_odom.hpp"
 
 
-namespace wheel_odom_node
+namespace wheel_odom
 {
 
-WheelOdomNode::WheelOdomNode()
+WheelOdom::WheelOdom()
 : Node("wheel_odom_node"),
   pose_x_{0.0}, pose_y_{0.0}, previous_time_{std::nullopt}
 {
@@ -30,7 +30,7 @@ WheelOdomNode::WheelOdomNode()
   RCLCPP_INFO(get_logger(), "Wheel odom node initialized successfully");
 }
 
-bool WheelOdomNode::initialize_parameters()
+bool WheelOdom::initialize_parameters()
 {
   try {
     // Input topics
@@ -69,7 +69,7 @@ bool WheelOdomNode::initialize_parameters()
   }
 }
 
-bool WheelOdomNode::initialize_ros_components()
+bool WheelOdom::initialize_ros_components()
 {
   try {
     rclcpp::QoS qos(queue_size_);
@@ -87,7 +87,7 @@ bool WheelOdomNode::initialize_ros_components()
 
     sync_ = std::make_shared<message_filters::Synchronizer<policy_t>>(
       policy_t(sync_queue_size_), sub_wheel_spd_, sub_imu_);
-    sync_->registerCallback(&WheelOdomNode::sync_callback, this);
+    sync_->registerCallback(&WheelOdom::sync_callback, this);
 
     pub_wheel_odom_ = create_publisher<nav_msgs::msg::Odometry>(
       wheel_odom_output_topic_, qos);
@@ -101,7 +101,7 @@ bool WheelOdomNode::initialize_ros_components()
   }
 }
 
-void WheelOdomNode::sync_callback(
+void WheelOdom::sync_callback(
   const geometry_msgs::msg::TwistStamped::ConstSharedPtr wheel_spd_msg,
   const sensor_msgs::msg::Imu::ConstSharedPtr imu_msg)
 {
@@ -138,7 +138,7 @@ void WheelOdomNode::sync_callback(
   pub_wheel_odom_->publish(wheel_odom_msg);
 }
 
-double WheelOdomNode::wrap2pi(const double angle)
+double WheelOdom::wrap2pi(const double angle)
 {
   return std::atan2(std::sin(angle), std::cos(angle));
 }
