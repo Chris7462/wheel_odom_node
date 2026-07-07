@@ -1,5 +1,8 @@
 #pragma once
 
+// std header
+#include <optional>
+
 // ros header
 #include <rclcpp/rclcpp.hpp>
 #include <message_filters/subscriber.hpp>
@@ -74,10 +77,9 @@ private:
 
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pub_wheel_odom_;
 
-  bool wheel_init_;
   double pose_x_;
   double pose_y_;
-  double previous_time_;
+  std::optional<double> previous_time_;
 };
 
 } // wheel_odom_node

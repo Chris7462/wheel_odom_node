@@ -11,7 +11,7 @@ namespace wheel_odom_node
 
 WheelOdomNode::WheelOdomNode()
 : Node("wheel_odom_node"),
-  wheel_init_{false}, pose_x_{0.0}, pose_y_{0.0}, previous_time_{0.0}
+  pose_x_{0.0}, pose_y_{0.0}, previous_time_{std::nullopt}
 {
   // Initialize ROS2 parameters with validation
   if (!initialize_parameters()) {
@@ -37,7 +37,7 @@ bool WheelOdomNode::initialize_parameters()
     wheel_spd_input_topic_ = declare_parameter(
       "wheel_spd_input_topic", std::string("kitti/oxts/gps/vel"));
     imu_input_topic_ = declare_parameter(
-      "imu_input_topic", std::string("kitti/oxts/imu_rotated"));
+      "imu_input_topic", std::string("kitti/vehicle/imu_local"));
 
     // Output topic
     wheel_odom_output_topic_ = declare_parameter(
@@ -107,21 +107,18 @@ void WheelOdomNode::sync_callback(
 {
   double current_time = rclcpp::Time(wheel_spd_msg->header.stamp).seconds();
 
-  if (!wheel_init_) {
-    previous_time_ = current_time;
-    wheel_init_ = true;
-  }
+  // dt is 0 on the first message (no previous timestamp yet), so integration
+  // is a no-op that call
+  double dt = previous_time_ ? (current_time - *previous_time_) : 0.0;
+  previous_time_ = current_time;
 
   // calculate the current pose of the vehicle based on the wheel speed
-  const double & v = wheel_spd_msg->twist.linear.x;
-  const double & a = imu_msg->linear_acceleration.x;
-  double dt = current_time - previous_time_;
+  const double v = wheel_spd_msg->twist.linear.x;
+  const double a = imu_msg->linear_acceleration.x;
   double yaw, dummy;
   tf2::getEulerYPR(imu_msg->orientation, yaw, dummy, dummy);
   pose_x_ += (v * dt + 0.5 * a * dt * dt) * std::cos(yaw);
   pose_y_ += (v * dt + 0.5 * a * dt * dt) * std::sin(yaw);
-
-  previous_time_ = current_time;
 
   tf2::Quaternion q_current;
   q_current.setRPY(0.0, 0.0, wrap2pi(yaw));
