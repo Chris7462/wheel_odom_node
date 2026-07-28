@@ -37,7 +37,7 @@ bool WheelOdom::initialize_parameters()
     wheel_spd_input_topic_ = declare_parameter(
       "wheel_spd_input_topic", std::string("kitti/oxts/gps/vel"));
     imu_input_topic_ = declare_parameter(
-      "imu_input_topic", std::string("kitti/vehicle/imu_local"));
+      "imu_input_topic", std::string("kitti/vehicle/imu"));
 
     // Output topic
     wheel_odom_output_topic_ = declare_parameter(

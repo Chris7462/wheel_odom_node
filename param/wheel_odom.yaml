@@ -2,7 +2,7 @@ wheel_odom_node:
   ros__parameters:
     # Input topics
     wheel_spd_input_topic: "kitti/oxts/gps/vel"
-    imu_input_topic: "kitti/vehicle/imu_local"
+    imu_input_topic: "kitti/vehicle/imu"
 
     # Output topic
     wheel_odom_output_topic: "kitti/wheel_odom"
